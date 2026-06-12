@@ -3,7 +3,7 @@
  */
 
 import React, { useState } from "react";
-import { Expense, ExpenseFormData } from "../types";
+import { Expense, ExpenseFormData, CategoryType } from "../types";
 import { formatCurrency, formatDate } from "../utils/expenseUtils";
 import { getCategoryEmoji } from "../constants/categoryEmojis";
 import { COLORS } from "../constants/colors";
@@ -13,27 +13,25 @@ import { deleteExpense, updateExpense } from "../services/api";
 
 interface CalendarExpenseTableProps {
   expenses: Expense[];
+  categories: CategoryType[];
+  totalPages: number;
+  currentPage: number;
   onExpenseUpdated: () => void;
+  onPageChange: (page: number) => void;
 }
-
-const ITEMS_PER_PAGE = 10;
 
 export function CalendarExpenseTable({
   expenses,
+  categories,
+  totalPages,
+  currentPage,
   onExpenseUpdated,
+  onPageChange,
 }: CalendarExpenseTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deletingExpense, setDeletingExpense] = useState<Expense | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
-  const totalPages = Math.ceil(expenses.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentExpenses = expenses.slice(startIndex, endIndex);
-
-  const handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
     setIsEditModalOpen(true);
   };
@@ -130,7 +128,7 @@ export function CalendarExpenseTable({
           </tr>
         </thead>
         <tbody>
-          {currentExpenses.map((expense) => (
+          {expenses.map((expense) => (
             <tr key={expense.id}>
               <td style={tdStyle}>{formatDate(new Date(expense.date))}</td>
               <td style={tdStyle}>{expense.description}</td>
@@ -175,7 +173,7 @@ export function CalendarExpenseTable({
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={setCurrentPage}
+        onPageChange={onPageChange}
       />
 
       <Modal
@@ -194,6 +192,7 @@ export function CalendarExpenseTable({
               category: editingExpense.category,
               date: formatDate(new Date(editingExpense.date)),
             }}
+            categories={categories}
             onSubmit={handleUpdate}
             onCancel={() => {
               setIsEditModalOpen(false);
