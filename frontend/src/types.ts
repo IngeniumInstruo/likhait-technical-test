@@ -12,6 +12,18 @@ export interface Expense {
   updated_at: string;
 }
 
+export interface PaginatedExpenses {
+  data: Expense[];
+  total_count: number;
+  current_page: number;
+  total_pages: number;
+}
+
+export interface CategoryType {
+  id: number;
+  name: string;
+}
+
 export interface ExpenseFormData {
   amount: string;
   description: string;
