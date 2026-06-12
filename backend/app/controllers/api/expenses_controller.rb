@@ -1,6 +1,6 @@
 class Api::ExpensesController < ApplicationController
   def index
-    expenses = Expense.includes(:category).order(created_at: :desc)
+    expenses = Expense.includes(:category).order(date: :desc, created_at: :desc)
 
     if params[:year].present? && params[:month].present?
       year = params[:year].to_i
@@ -9,10 +9,29 @@ class Api::ExpensesController < ApplicationController
       start_date = Date.new(year, month, 1)
       end_date = start_date.end_of_month
 
-      expenses = expenses.where(created_at: start_date.beginning_of_day..end_date.end_of_day)
+      expenses = expenses.where(date: start_date.beginning_of_day..end_date.end_of_day)
     end
 
-    render json: expenses.map { |expense| format_expense(expense) }
+    # Pagination parameters
+    limit = (params[:limit] || 10).to_i
+    offset = (params[:offset] || 0).to_i
+    limit = 10 if limit <= 0  # Prevent invalid limit values
+    offset = 0 if offset < 0  # Prevent negative offset
+
+    # Get total count before pagination
+    total_count = expenses.count
+    current_page = (offset / limit) + 1
+    total_pages = (total_count.to_f / limit).ceil
+
+    # Apply pagination
+    paginated_expenses = expenses.limit(limit).offset(offset)
+
+    render json: {
+      data: paginated_expenses.map { |expense| format_expense(expense) },
+      total_count: total_count,
+      current_page: current_page,
+      total_pages: total_pages
+    }
   end
 
   def create
